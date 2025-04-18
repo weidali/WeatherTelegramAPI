@@ -7,6 +7,7 @@ Route::get('/', function () {
     $app_name = config('app.name');
     $app_version = $file_composer['version'];
 
-    $view = '<pre>' . $app_name . ' - '. $app_version . '</pre>';
+    $view = '<pre>'.$app_name.' - '.$app_version.'</pre>';
+
     return $view;
 });
