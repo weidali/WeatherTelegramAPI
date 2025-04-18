@@ -6,7 +6,7 @@ use App\Exceptions\WeatherApiException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WindyAdapter implements WeatherAdapterInterface
+class WindyAdapter implements WeatherServiceInterface
 {
     /**
      * Получение прогноза погоды с Windy API

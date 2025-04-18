@@ -6,7 +6,7 @@ use App\Exceptions\WeatherApiException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class OpenWeatherMapAdapter implements WeatherAdapterInterface
+class OpenWeatherMapAdapter implements WeatherServiceInterface
 {
     /**
      * Получение прогноза погоды с OpenWeatherMap API

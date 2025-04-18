@@ -2,8 +2,8 @@
 
 namespace App\Services\Telegram;
 
-use App\Formatters\MarkdownFormatter;
-use App\Formatters\TextFormatter;
+use App\Services\Formatters\MarkdownFormatter;
+use App\Services\Formatters\TextFormatter;
 use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
