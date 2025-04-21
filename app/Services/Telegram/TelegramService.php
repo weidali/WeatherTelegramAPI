@@ -124,6 +124,19 @@ class TelegramService
         }
     }
 
+    public function sendDeployMessage(string $chatId, string $message, string $parseMode = 'Markdown'): bool
+    {
+        try {
+            return $this->sendMessage($chatId, $message, $parseMode);
+        } catch (\Exception $e) {
+            Log::error('Ошибка при отправке тестового сообщения в Telegram', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
     /**
      * Базовый метод отправки сообщения в Telegram
      *
