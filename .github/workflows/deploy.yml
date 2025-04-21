@@ -17,12 +17,13 @@ jobs:
 
       - name: Check if tag is on main
         id: verify_tag
+        shell: bash
         run: |
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           COMMIT=$(git rev-list -n 1 "$TAG_NAME")
           BRANCHES=$(git branch -r --contains "$COMMIT")
           echo "🔍 Commit $COMMIT is in branches: $BRANCHES"
-
+      
           if echo "$BRANCHES" | grep -q "origin/main"; then
             echo "✅ Tag is on main"
             echo "ok=true" >> $GITHUB_OUTPUT
