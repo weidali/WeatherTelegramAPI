@@ -8,7 +8,7 @@ step=1
 # current Date
 today=`date +%Y%m%d_%H%M`
 
-version=`php82 artisan --version`
+version=`/opt/php/8.2/bin/php artisan --version`
 
 if [[ ${version} != *"Laravel Framework"* ]]; then
         echo "Not a Laravel app, exiting."
@@ -17,17 +17,17 @@ fi
 
 echo "Deploying..."
 
-php82 artisan down || true
+/opt/php/8.2/bin/php artisan down || true
 git pull origin
 
 /opt/php/8.2/bin/php /var/www/u1229058/data/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-php82 artisan package:discover --ansi
+/opt/php/8.2/bin/php artisan package:discover --ansi
 
-php82 artisan migrate --force
-php82 artisan cache:clear
-php82 artisan route:cache
-php82 artisan config:cache
-php82 artisan view:cache
-php82 artisan up
+/opt/php/8.2/bin/php artisan migrate --force
+/opt/php/8.2/bin/php artisan cache:clear
+/opt/php/8.2/bin/php artisan route:cache
+/opt/php/8.2/bin/php artisan config:cache
+/opt/php/8.2/bin/php artisan view:cache
+/opt/php/8.2/bin/php artisan up
 
 echo "Done!"
