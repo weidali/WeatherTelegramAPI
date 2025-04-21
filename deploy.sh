@@ -24,3 +24,5 @@ git pull origin
 /opt/php/8.2/bin/php artisan up
 
 echo "Done!"
+
+/opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info

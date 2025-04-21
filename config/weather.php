@@ -8,6 +8,7 @@ return [
             'lon' => env('WEATHER_LON', 40.2628),
             'name' => 'Гагрский район',
             'chat_id' => env('TELEGRAM_CHAT_ID'),
+            'dev_chat_id' => env('TELEGRAM__DEV_CHAT_ID'),
         ],
         // В будущем можно добавить другие локации
         // 'location2' => [

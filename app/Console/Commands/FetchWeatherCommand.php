@@ -72,6 +72,28 @@ class FetchWeatherCommand extends Command
             return 0;
         }
 
+        if ($this->option('deploy-info')) {
+            $this->info('Отправка служебной информации о деплое в Telegram...');
+
+            $now = now()->format('Y-m-d H:i:s');
+            $branch = trim(shell_exec('git rev-parse --abbrev-ref HEAD'));
+            $commit = trim(shell_exec('git log -1 --pretty=format:"%h %s"'));
+            $version = trim(shell_exec('/opt/php/8.2/bin/php artisan --version'));
+
+            $message = <<<TEXT
+        🛠 *Информация о деплое*
+        📅 Время: `$now`
+        🌿 Ветка: `$branch`
+        📦 Коммит: `$commit`
+        🚀 Версия: `$version`
+        TEXT;
+
+            $developChatId = $location['dev_chat_id'];
+            $this->telegramService->sendMarkdownMessage($developChatId, $message);
+
+            return 0;
+        }
+
         if ($this->option('test-openweathermap')) {
             $this->info('Отправка тестового сообщения для OpenWeatherMap API...');
             $this->telegramService->sendTestMessage($chatId, 'OpenWeatherMap API');
