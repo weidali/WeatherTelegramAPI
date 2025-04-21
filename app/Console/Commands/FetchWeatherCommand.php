@@ -79,7 +79,7 @@ class FetchWeatherCommand extends Command
             $branch = trim(shell_exec('git rev-parse --abbrev-ref HEAD'));
             $commit = trim(shell_exec('git log -1 --pretty=format:"%h %s"'));
             $version = trim(shell_exec('/opt/php/8.2/bin/php artisan --version'));
-            $appName =  config('app.name');
+            $appName = config('app.name');
 
             $message = <<<TEXT
         🛠 *Информация о деплое*

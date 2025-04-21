@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to hosting via ssh
+        uses: appleboy/ssh-action@master
+        with:
+          server: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ vars.PATH }}
+            set -e
+
+            echo "Deploying..."
+
+            /opt/php/8.2/bin/php artisan down || true
+            git pull origin
+
+            /opt/php/8.2/bin/php /var/www/u1229058/data/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            /opt/php/8.2/bin/php artisan package:discover --ansi
+
+            /opt/php/8.2/bin/php artisan migrate --force
+            /opt/php/8.2/bin/php artisan cache:clear
+            /opt/php/8.2/bin/php artisan route:cache
+            /opt/php/8.2/bin/php artisan config:cache
+            /opt/php/8.2/bin/php artisan up
+
+            /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info
+            echo "Done!"
+                
+   
