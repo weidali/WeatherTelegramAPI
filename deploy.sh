@@ -2,6 +2,12 @@
 
 set -e
 
+start=$(date +%s)
+step=1
+
+# current Date
+today=`date +%Y%m%d_%H%M`
+
 version=`php82 artisan --version`
 
 if [[ ${version} != *"Laravel Framework"* ]]; then
