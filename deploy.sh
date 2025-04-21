@@ -27,7 +27,6 @@ git pull origin
 /opt/php/8.2/bin/php artisan cache:clear
 /opt/php/8.2/bin/php artisan route:cache
 /opt/php/8.2/bin/php artisan config:cache
-/opt/php/8.2/bin/php artisan view:cache
 /opt/php/8.2/bin/php artisan up
 
 echo "Done!"
