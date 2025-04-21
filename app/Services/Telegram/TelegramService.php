@@ -145,6 +145,12 @@ class TelegramService
             $params['parse_mode'] = $parseMode;
         }
 
+        Log::debug('Отправка сообщения', [
+            'chat_id' => $chatId,
+            'parse_mode' => $parseMode,
+            'text' => $text,
+        ]);
+
         $response = $this->telegram->sendMessage($params);
 
         return $response->isOk();

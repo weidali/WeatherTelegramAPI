@@ -6,7 +6,7 @@ return [
         'default' => [
             'lat' => env('WEATHER_LAT', 43.1739),
             'lon' => env('WEATHER_LON', 40.2628),
-            'name' => 'Алахадзы',
+            'name' => 'Гагрский район',
             'chat_id' => env('TELEGRAM_CHAT_ID'),
         ],
         // В будущем можно добавить другие локации
