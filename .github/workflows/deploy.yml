@@ -14,28 +14,27 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          fetch-tags: true
+      
+      - name: Fetch all branches
+        run: git fetch --all --tags --prune
 
       - name: Check if tag is on main
         id: verify_tag
-        shell: bash
         run: |
-          TAG_NAME="${GITHUB_REF#refs/tags/}"
-          COMMIT=$(git rev-list -n 1 "$TAG_NAME")
-          BRANCHES=$(git branch -r --contains "$COMMIT")
-          echo "🔍 Commit $COMMIT is in branches: $BRANCHES"
-      
-          if echo "$BRANCHES" | grep -q "origin/main"; then
-            echo "✅ Tag is on main"
+          TAG=${GITHUB_REF#refs/tags/}
+          COMMIT=$(git rev-list -n 1 "$TAG")
+
+          if git branch -r --contains "$COMMIT" | grep -q "origin/main"; then
             echo "ok=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ Tag is not on main, cancelling"
             echo "ok=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Cancel if not on main
+      - name: Cancel if not in main
         if: steps.verify_tag.outputs.ok != 'true'
         run: exit 1
-
+        
       - name: Deploy to hosting via ssh
         uses: appleboy/ssh-action@master
         with:
