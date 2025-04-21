@@ -15,7 +15,7 @@ class FetchWeatherCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'weather:fetch-and-send {location=default} {--test-windy : Отправить тестовое сообщение для Windy API} {--test-openweathermap : Отправить тестовое сообщение для OpenWeatherMap API}';
+    protected $signature = 'weather:fetch-and-send {location=default} {--test-windy : Отправить тестовое сообщение для Windy API} {--test-openweathermap : Отправить тестовое сообщение для OpenWeatherMap API} {--deploy-info}';
 
     /**
      * The console command description.
