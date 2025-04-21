@@ -18,12 +18,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.PATH }}
-            set -e
 
-            echo "🚀 Deploying version: ${{ github.ref_name }} from main"
-
+            echo "Deploying..."
             /opt/php/8.2/bin/php artisan down || true
-            git pull origin main --tags
+            git pull origin main
 
             /opt/php/8.2/bin/php /var/www/u1229058/data/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
             /opt/php/8.2/bin/php artisan package:discover --ansi
@@ -36,5 +34,5 @@ jobs:
 
             /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info
 
-            echo "✅ Deployed successfully!"
+            echo "✅ Done!"
           shell: sh
