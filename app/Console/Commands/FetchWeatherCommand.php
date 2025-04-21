@@ -89,7 +89,12 @@ class FetchWeatherCommand extends Command
         TEXT;
 
             $developChatId = $location['dev_chat_id'];
-            $this->telegramService->sendMarkdownMessage($developChatId, $message);
+            $this->telegramService->sendMessage([
+                'chat_id' => $developChatId,
+                'text' => $message,
+                'parse_mode' => 'Markdown',
+            ]);
+            
 
             return 0;
         }
