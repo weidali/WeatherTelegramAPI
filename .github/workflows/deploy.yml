@@ -1,4 +1,4 @@
-name: Deploy from tag in main
+name: Deployment
 
 on:
   push:
@@ -6,17 +6,20 @@ on:
       - main
 
 jobs:
-  deploy:
+  deployment:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Deploy to hosting via ssh
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: executing remote ssh commands using ssh key
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            whoami
             cd ${{ secrets.PATH }}
 
             echo "Deploying..."
@@ -34,5 +37,4 @@ jobs:
 
             /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info
 
-            echo "✅ Done!"
-          shell: sh
+            echo "✅ Deployed successfully!"
