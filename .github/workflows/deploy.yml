@@ -1,32 +1,39 @@
-name: Deploy
+name: Deploy from tag in main
 
 on:
   push:
     tags:
-      - 'v*' # Любые теги, начинающиеся с v, например: v1.0.0
+      - 'v*'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Проверка ветки, связанной с тегом
+      - name: Checkout full history
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # нужно для получения всей истории (тегов и веток)
+          fetch-depth: 0
 
-      - name: Получить ветку тега
-        id: tag_branch
+      - name: Check if tag is on main
+        id: verify_tag
         run: |
-          TAG_REF="${GITHUB_REF#refs/tags/}"
-          BRANCH=$(git branch -r --contains "refs/tags/$TAG_REF" | grep origin/main || true)
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          COMMIT=$(git rev-list -n 1 "$TAG_NAME")
+          BRANCHES=$(git branch -r --contains "$COMMIT")
+          echo "🔍 Commit $COMMIT is in branches: $BRANCHES"
 
-      - name: Прервать, если тег не в main
-        if: steps.tag_branch.outputs.branch == ''
-        run: |
-          echo "❌ Тег не относится к ветке main. Прерываем деплой."
-          exit 1
+          if echo "$BRANCHES" | grep -q "origin/main"; then
+            echo "✅ Tag is on main"
+            echo "ok=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Tag is not on main, cancelling"
+            echo "ok=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Cancel if not on main
+        if: steps.verify_tag.outputs.ok != 'true'
+        run: exit 1
 
       - name: Deploy to hosting via ssh
         uses: appleboy/ssh-action@master
@@ -38,7 +45,7 @@ jobs:
             cd ${{ secrets.PATH }}
             set -e
 
-            echo "Deploying tag ${{ github.ref_name }} from main..."
+            echo "🚀 Deploying version: ${{ github.ref_name }} from main"
 
             /opt/php/8.2/bin/php artisan down || true
             git pull origin main --tags
@@ -54,4 +61,4 @@ jobs:
 
             /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info
 
-            echo "✅ Done!"
+            echo "✅ Deployed successfully!"
