@@ -37,3 +37,4 @@ jobs:
             /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info
 
             echo "✅ Deployed successfully!"
+          shell: sh
