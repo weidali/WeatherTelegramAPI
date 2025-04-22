@@ -2,32 +2,42 @@ name: Deployment
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*' # Триггер по тегам, например v0.9.4
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.8.0
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Deploy to server
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
-          cd ${{ secrets.PATH }} &&
-          /opt/php/8.2/bin/php artisan down || true &&
-          git pull origin main  &&
-          /opt/php/8.2/bin/php /var/www/u1229058/data/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev  &&
-          /opt/php/8.2/bin/php artisan package:discover --ansi  &&
-          /opt/php/8.2/bin/php artisan migrate --force  &&
-          /opt/php/8.2/bin/php artisan cache:clear  &&
-          /opt/php/8.2/bin/php artisan route:cache  &&
-          /opt/php/8.2/bin/php artisan config:cache  &&
-          /opt/php/8.2/bin/php artisan up  &&
-          /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info  &&
+      - name: Deploy to server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
+            set -e
+            cd ${{ secrets.PATH }}
+
+            echo "🚀 Deploying version: ${{ github.ref_name }}"
+
+            /opt/php/8.2/bin/php artisan down || true
+            git pull origin main --tags
+
+            /opt/php/8.2/bin/php /var/www/u1229058/data/bin/composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+            /opt/php/8.2/bin/php artisan package:discover --ansi
+
+            /opt/php/8.2/bin/php artisan migrate --force
+            /opt/php/8.2/bin/php artisan cache:clear
+            /opt/php/8.2/bin/php artisan route:cache
+            /opt/php/8.2/bin/php artisan config:cache
+            /opt/php/8.2/bin/php artisan up
+
+            /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info
+
+            echo "✅ Deployed successfully!"
+          ENDSSH
