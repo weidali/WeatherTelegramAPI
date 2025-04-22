@@ -19,7 +19,7 @@ jobs:
 
     - name: Deploy to server
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "
+        ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} <<'ENDSSH'
           cd ${{ secrets.PATH }} &&
           /opt/php/8.2/bin/php artisan down || true &&
           git pull origin main  &&
@@ -31,4 +31,3 @@ jobs:
           /opt/php/8.2/bin/php artisan config:cache  &&
           /opt/php/8.2/bin/php artisan up  &&
           /opt/php/8.2/bin/php artisan weather:fetch-and-send --deploy-info  &&
-          "
