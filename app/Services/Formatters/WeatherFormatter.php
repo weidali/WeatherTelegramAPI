@@ -28,9 +28,9 @@ class WeatherFormatter
             $dayName   = $first['day_name'] ?? 'Неизвестно';
             $waterTemp = $first['water_temp'] ?? null;
 
-            // Заголовок карточки: день + вода
-            $waterStr = ($waterTemp !== null) ? "   🌊 Вода: " . round($waterTemp) . "°C" : '';
-            $message .= "\n📅 {$dayName}{$waterStr}\n";
+            // Заголовок карточки: день (жирным) + температура воды
+            $waterStr = ($waterTemp !== null) ? "  Темп. воды: " . round($waterTemp) . "°C" : '';
+            $message .= "\n📅 <b>{$dayName}</b>{$waterStr}\n";
 
             // Проходим по интервалам в фиксированном порядке (утро, полдень, вечер)
             foreach ($timeRanges as $rangeKey => $rangeInfo) {
@@ -49,8 +49,8 @@ class WeatherFormatter
                 $wind = ($timeData['wind'] !== null) ? round($timeData['wind']) . ' м/с' : 'Н/Д';
                 $wave = ($timeData['wave'] !== null) ? round($timeData['wave'], 1) . ' м' : 'Н/Д';
 
-                // Строка-заголовок интервала: эмодзи времени + название + состояние
-                $message .= "{$rangeInfo['emoji']} {$rangeInfo['name']} · {$condition['emoji']} {$condition['label']}\n";
+                // Строка-заголовок интервала: название + состояние (без эмодзи времени)
+                $message .= "{$rangeInfo['name']} · {$condition['emoji']} {$condition['label']}\n";
                 // Строка данных с отступом
                 $message .= "   🌡 {$temp}   💨 {$wind}   🌊 {$wave}\n";
             }

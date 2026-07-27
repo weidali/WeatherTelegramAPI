@@ -38,9 +38,9 @@ class TelegramService
         try {
             $message = $this->formatter->format($weatherData, $locationName);
 
-            // Отправляем обычным текстом: эмодзи и переносы строк работают без parse_mode,
-            // что избавляет от проблем с экранированием спецсимволов Markdown.
-            return $this->sendMessage($chatId, $message);
+            // parse_mode HTML — чтобы работал <b> в названиях дней.
+            // HTML удобнее MarkdownV2: не требует экранирования . - ( ) и т.п.
+            return $this->sendMessage($chatId, $message, 'HTML');
         } catch (\Exception $e) {
             Log::error('Ошибка при отправке прогноза погоды в Telegram', [
                 'error' => $e->getMessage(),
