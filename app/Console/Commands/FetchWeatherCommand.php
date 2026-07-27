@@ -80,15 +80,16 @@ class FetchWeatherCommand extends Command
             $now = now()->format('Y-m-d H:i:s');
             $branch = trim(shell_exec('git rev-parse --abbrev-ref HEAD'));
             $commit = trim(shell_exec('git log -1 --pretty=format:"%h %s"'));
-            $version = trim(shell_exec('/opt/php/8.2/bin/php artisan --version'));
+            $version = trim(shell_exec('git tag -l --sort=-v:refname | head -1'));
             $appName = config('app.name');
 
             $message = <<<TEXT
-        🛠 *Информация о деплое*
-        🚀 Приложение: `$appName`
-        📅 Время: `$now` Версия: `$version`
-        🌿 Ветка: `$branch` (Коммит: `$commit`)
-        TEXT;
+            🛠 * Деплой*
+            Time: `$now` 
+            App: `$appName`
+            Version: `$version`
+            Branch: `$branch` (Коммит: `$commit`)
+            TEXT;
 
             $developChatId = $location['dev_chat_id'];
             $this->telegramService->sendDeployMessage(
