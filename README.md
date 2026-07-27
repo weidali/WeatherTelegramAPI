@@ -203,18 +203,32 @@ php artisan weather:fetch-and-send
 
 ### 🔧 Как задеплоить новую версию
 
+0. Коммитим текущую работу на dev
+   ```bash
+   git add .
+   git commit -m "feat: единый формат прогноза со ступенчатыми карточками"
+   git push origin dev
+   ```
+
 1. Убедись, что актуальный код находится в ветке `main`:
 
    ```bash
    git checkout main
+   git pull origin main
    git merge dev
+   git push origin main
    ```
 
 2. Создай новый тег:
 
+   Проверь последний
+   ```
+   git tag -l --sort=-v:refname | head -5
+   ```
+
    ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
+   git tag -a v1.1.0 -m "Единый формат прогноза со ступенчатыми карточками"
+   git push origin v1.1.0
    ```
 
 3. GitHub Actions автоматически:
