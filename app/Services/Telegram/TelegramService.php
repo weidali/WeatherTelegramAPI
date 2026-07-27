@@ -133,8 +133,10 @@ class TelegramService
             $params['parse_mode'] = $parseMode;
         }
 
-        $response = $this->telegram->sendMessage($params);
+        // sendMessage() возвращает объект Message и бросает исключение при ошибке.
+        // Если исключения не было - сообщение доставлено успешно.
+        $this->telegram->sendMessage($params);
 
-        return $response->isOk();
+        return true;
     }
 }
