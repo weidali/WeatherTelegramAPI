@@ -15,14 +15,9 @@ class TelegramService
     protected $telegram;
 
     /**
-     * @var MarkdownFormatter
+     * @var WeatherFormatter
      */
-    protected $markdownFormatter;
-
-    /**
-     * @var TextFormatter
-     */
-    protected $textFormatter;
+    protected $formatter;
 
     public function __construct(Api $telegram, WeatherFormatter $formatter)
     {
@@ -31,49 +26,36 @@ class TelegramService
     }
 
     /**
-     * Отправка прогноза погоды в Telegram
+     * Отправка прогноза погоды в Telegram (одно сообщение).
      *
-     * @param  array  $weatherData  Данные о погоде
-     * @param  string  $chatId  ID чата или группы
+     * @param  array   $weatherData   Данные о погоде
+     * @param  string  $chatId        ID чата или группы
      * @param  string  $locationName  Название локации
-     * @return bool Успешность отправки
+     * @return bool    Успешность отправки
      */
     public function sendWeatherForecast(array $weatherData, string $chatId, string $locationName): bool
     {
-        $format = config('weather.message_format', 'both');
-        $success = true;
-
         try {
-            if ($format === 'table' || $format === 'both') {
-                $markdownMessage = $this->markdownFormatter->format($weatherData, $locationName);
-                $this->sendMessage($chatId, $markdownMessage, 'Markdown');
-            }
+            $message = $this->formatter->format($weatherData, $locationName);
 
-            if ($format === 'text' || $format === 'both') {
-                // Если отправляем оба формата, делаем паузу в 1 секунду между сообщениями
-                if ($format === 'both') {
-                    sleep(1);
-                }
-
-                $textMessage = $this->textFormatter->format($weatherData, $locationName);
-                $this->sendMessage($chatId, $textMessage);
-            }
+            // Отправляем обычным текстом: эмодзи и переносы строк работают без parse_mode,
+            // что избавляет от проблем с экранированием спецсимволов Markdown.
+            return $this->sendMessage($chatId, $message);
         } catch (\Exception $e) {
             Log::error('Ошибка при отправке прогноза погоды в Telegram', [
                 'error' => $e->getMessage(),
             ]);
-            $success = false;
-        }
 
-        return $success;
+            return false;
+        }
     }
 
     /**
      * Отправка уведомления об ошибке в Telegram
      *
      * @param  string  $errorMessage  Сообщение об ошибке
-     * @param  string  $chatId  ID чата или группы
-     * @return bool Успешность отправки
+     * @param  string  $chatId        ID чата или группы
+     * @return bool
      */
     public function sendErrorNotification(string $errorMessage, string $chatId): bool
     {
@@ -96,7 +78,7 @@ class TelegramService
      *
      * @param  string  $chatId  ID чата или группы
      * @param  string  $source  Название источника данных
-     * @return bool Успешность отправки
+     * @return bool
      */
     public function sendTestMessage(string $chatId, string $source): bool
     {
@@ -117,14 +99,15 @@ class TelegramService
     }
 
     /**
-    * Отправка служебного сообщения о деплое в чат разработки.
-    */
+     * Отправка служебного сообщения о деплое в чат разработки.
+     */
     public function sendDeployMessage(string $chatId, string $text, ?string $parseMode = 'Markdown'): bool
     {
         try {
             return $this->sendMessage($chatId, $text, $parseMode);
         } catch (\Exception $e) {
             Log::error('Ошибка при отправке deploy-сообщения в Telegram', ['error' => $e->getMessage()]);
+
             return false;
         }
     }
@@ -132,10 +115,10 @@ class TelegramService
     /**
      * Базовый метод отправки сообщения в Telegram
      *
-     * @param  string  $chatId  ID чата или группы
-     * @param  string  $text  Текст сообщения
-     * @param  string|null  $parseMode  Режим разбора сообщения (Markdown, HTML)
-     * @return bool Успешность отправки
+     * @param  string       $chatId     ID чата или группы
+     * @param  string       $text       Текст сообщения
+     * @param  string|null  $parseMode  Режим разбора (Markdown, HTML)
+     * @return bool
      *
      * @throws TelegramSDKException
      */
@@ -143,7 +126,7 @@ class TelegramService
     {
         $params = [
             'chat_id' => $chatId,
-            'text' => $text,
+            'text'    => $text,
         ];
 
         if ($parseMode) {
