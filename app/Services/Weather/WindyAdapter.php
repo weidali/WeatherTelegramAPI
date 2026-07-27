@@ -4,10 +4,11 @@ namespace App\Services\Weather;
 
 use App\Exceptions\WeatherApiException;
 use App\Services\Weather\Concerns\NormalizesWeather;
+use App\Services\Weather\WeatherServiceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WindyAdapter implements WeatherAdapterInterface
+class WindyAdapter implements WeatherServiceInterface
 {
     use NormalizesWeather;
 
