@@ -77,19 +77,32 @@ class FetchWeatherCommand extends Command
         if ($this->option('deploy-info')) {
             $this->info('Отправка служебной информации о деплое в Telegram...');
 
-            $now = now()->format('Y-m-d H:i:s');
-            $branch = trim(shell_exec('git rev-parse --abbrev-ref HEAD'));
-            $commit = trim(shell_exec('git log -1 --pretty=format:"%h %s"'));
+            $now     = now()->format('Y-m-d H:i:s');
+            $branch  = trim(shell_exec('git rev-parse --abbrev-ref HEAD'));
             $version = trim(shell_exec('git tag -l --sort=-v:refname | head -1'));
             $appName = config('app.name');
 
-            $message = <<<TEXT
-            🛠 * Деплой*
-            Time: `$now` 
-            App: `$appName`
-            Version: `$version`
-            Branch: `$branch` (Коммит: `$commit`)
-            TEXT;
+            // Полные данные последнего коммита
+            $hash    = trim(shell_exec('git log -1 --pretty=format:"%h"'));
+            $subject = trim(shell_exec('git log -1 --pretty=format:"%s"'));
+            $body    = trim(shell_exec('git log -1 --pretty=format:"%b"'));
+            $author  = trim(shell_exec('git log -1 --pretty=format:"%an"'));
+
+            // Экранируем спецсимволы, чтобы не сломать Markdown-разметку
+            $escape = fn (string $s): string => str_replace(['`', '_', '*', '[', ']'], ' ', $s);
+
+            $message = "🛠 *Деплой*\n";
+            $message .= "Time: `{$now}`\n";
+            $message .= "App: `{$appName}`\n";
+            $message .= "Version: `{$version}`\n";
+            $message .= "Branch: `{$branch}`\n";
+            $message .= "Author: " . $escape($author) . "\n";
+            $message .= "Commit: `{$hash}` " . $escape($subject) . "\n";
+
+            // Тело коммита добавляем только если оно непустое
+            if ($body !== '') {
+                $message .= "\n📝 *Изменения:*\n" . $escape($body);
+            }
 
             $developChatId = $location['dev_chat_id'];
             $this->telegramService->sendDeployMessage(
