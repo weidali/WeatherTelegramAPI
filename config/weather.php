@@ -78,20 +78,21 @@ return [
         ],
     ],
 
-    // Формат сообщений (table, text, both)
-    'message_format' => env('WEATHER_FORMAT', 'both'),
-
     // Расписание
     'schedule' => [
         // Для летнего периода (июнь-август)
         'summer' => [
             'days' => [0, 2, 4], // Воскресенье, Вторник, Четверг
             'time' => '08:00',    // UTC+3
+             // Сколько дней прогноза показывать в сообщении (3–5 обычно достаточно)
+            'forecast_days' => env('WEATHER_FORECAST_DAYS_SUMMER', 4),
         ],
         // Для остального года
         'default' => [
             'days' => [0, 3],    // Воскресенье, Среда
             'time' => '08:00',    // UTC+3
+             // Сколько дней прогноза показывать в сообщении (3–5 обычно достаточно)
+            'forecast_days' => env('WEATHER_FORECAST_DAYS_DEFAULT', 5),
         ],
     ],
 ];

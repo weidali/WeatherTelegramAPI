@@ -46,8 +46,11 @@ API для обработки прогноза погоды с уведомле�
    WEATHER_LAT=43.1739
    WEATHER_LON=40.2628
 
-   # Weather Message Format (table, text, both)
-   WEATHER_FORMAT=both
+   # Сколько дней прогноза показывать в сообщении (3–5 обычно достаточно)
+   WEATHER_FORECAST_DAYS_SUMMER=4
+   WEATHER_FORECAST_DAYS_DEFAULT=5
+
+
    ```
 
 5. Создать кэш конфигурации:

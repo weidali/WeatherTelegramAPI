@@ -2,8 +2,14 @@
 
 namespace App\Services\Formatters;
 
+use App\Services\Schedule\SeasonSchedule;
+
 class WeatherFormatter
 {
+    public function __construct(
+        private SeasonSchedule $season
+    ) {}
+
     /**
      * Форматирование данных о погоде в единое сообщение с карточками по дням.
      *
@@ -18,6 +24,12 @@ class WeatherFormatter
         // Сортируем дни по дате (ключ вида Y-m-d)
         ksort($weatherData);
 
+        // Ограничиваем количество дней из конфига (по умолчанию 5)
+        $limit = $this->season->forecastDays();
+        if ($limit > 0) {
+            $weatherData = array_slice($weatherData, 0, $limit, true);
+        }
+
         $timeRanges = config('weather.time_ranges');
         $conditions = config('weather.conditions');
 
@@ -29,8 +41,8 @@ class WeatherFormatter
             $waterTemp = $first['water_temp'] ?? null;
 
             // Заголовок карточки: день (жирным) + температура воды
-            $waterStr = ($waterTemp !== null) ? "  Темп. воды: " . round($waterTemp) . "°C" : '';
-            $message .= "\n📅 <b>{$dayName}</b>{$waterStr}\n";
+            $waterStr = ($waterTemp !== null) ? "Темп. воды: " . round($waterTemp) . "°C" : '';
+            $message .= "\n📅 <b>{$dayName}</b>\n{$waterStr}\n\n";
 
             // Проходим по интервалам в фиксированном порядке (утро, полдень, вечер)
             foreach ($timeRanges as $rangeKey => $rangeInfo) {
