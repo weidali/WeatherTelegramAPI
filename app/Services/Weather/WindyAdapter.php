@@ -4,11 +4,10 @@ namespace App\Services\Weather;
 
 use App\Exceptions\WeatherApiException;
 use App\Services\Weather\Concerns\NormalizesWeather;
-use App\Services\Weather\WeatherServiceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class WindyAdapter implements WeatherServiceInterface
+class WindyAdapter implements WeatherAdapterInterface
 {
     use NormalizesWeather;
 
@@ -20,16 +19,20 @@ class WindyAdapter implements WeatherServiceInterface
             $response = Http::retry($config['retry_attempts'], $config['retry_delay'] * 1000)
                 ->timeout($config['timeout'])
                 ->post($config['base_url'], [
-                    'lat'        => $lat,
-                    'lon'        => $lon,
-                    'model'      => 'gfs',
-                    'parameters' => ['wind', 'temp', 'waves', 'ptype', 'lclouds'],
-                    'key'        => $config['key'],
+                    'lat'   => $lat,
+                    'lon'   => $lon,
+                    'model' => 'gfs',
+                    // Только параметры, которые принимает gfs.
+                    // Волны у gfs/gfsWave для Чёрного моря недоступны — оцениваем по ветру.
+                    'parameters' => ['temp', 'wind', 'ptype', 'lclouds', 'mclouds'],
                     'levels'     => ['surface'],
+                    'key'        => $config['key'],
                 ]);
 
             if (!$response->successful()) {
-                throw new WeatherApiException('Windy API вернул ошибку: ' . $response->status());
+                throw new WeatherApiException(
+                    'Windy API вернул ошибку: ' . $response->status() . ' ' . $response->body()
+                );
             }
 
             return $this->normalizeData($response->json());
@@ -48,19 +51,21 @@ class WindyAdapter implements WeatherServiceInterface
 
         $timestamps   = $apiData['ts'] ?? [];
         $temperatures = $apiData['temp-surface'] ?? [];
-        $winds        = $apiData['wind-surface'] ?? [];
-        $waves        = $apiData['waves_height-surface'] ?? $apiData['waves'] ?? [];
-        $ptype        = $apiData['ptype-surface'] ?? [];   // тип осадков
-        $lclouds      = $apiData['lclouds-surface'] ?? []; // низкая облачность, %
+        $windU        = $apiData['wind_u-surface'] ?? [];
+        $windV        = $apiData['wind_v-surface'] ?? [];
+        $ptype        = $apiData['ptype-surface'] ?? [];
+        $lclouds      = $apiData['lclouds-surface'] ?? [];
+        $mclouds      = $apiData['mclouds-surface'] ?? [];
 
         foreach ($timestamps as $i => $timestamp) {
+            // Windy отдаёт метки времени в миллисекундах
             $date = (new \DateTime('@' . intval($timestamp / 1000)))
                 ->setTimezone(new \DateTimeZone('Europe/Moscow'));
 
-            $dayKey = $date->format('Y-m-d');
-            $hour   = (int)$date->format('H');
-
+            $dayKey   = $date->format('Y-m-d');
+            $hour     = (int) $date->format('H');
             $rangeKey = $this->determineTimeRange($hour);
+
             if (!$rangeKey) {
                 continue;
             }
@@ -68,26 +73,30 @@ class WindyAdapter implements WeatherServiceInterface
             if (!isset($result[$dayKey][$rangeKey])) {
                 $result[$dayKey][$rangeKey] = [
                     'temps' => [], 'winds' => [], 'waves' => [], 'conditions' => [],
-                    'date' => $dayKey,
-                    'day_name' => $this->getDayName($date),
-                    'water_temp' => $this->estimateWaterTemp((int)$date->format('n')),
+                    'date'       => $dayKey,
+                    'day_name'   => $this->getDayName($date),
+                    'water_temp' => $this->estimateWaterTemp((int) $date->format('n')),
                 ];
             }
 
-            // Windy отдаёт температуру в Кельвинах — переводим в Цельсии
+            // Температура: Windy отдаёт в Кельвинах
             if (isset($temperatures[$i])) {
                 $result[$dayKey][$rangeKey]['temps'][] = $temperatures[$i] - 273.15;
             }
-            if (isset($winds[$i])) {
-                $result[$dayKey][$rangeKey]['winds'][] = $winds[$i];
-            }
-            if (isset($waves[$i])) {
-                $result[$dayKey][$rangeKey]['waves'][] = $waves[$i];
+
+            // Скорость ветра из компонентов u/v: модуль вектора
+            if (isset($windU[$i], $windV[$i])) {
+                $speed = sqrt($windU[$i] ** 2 + $windV[$i] ** 2);
+                $result[$dayKey][$rangeKey]['winds'][] = $speed;
+                // Волны оцениваем по ветру (реальных данных для Чёрного моря нет)
+                $result[$dayKey][$rangeKey]['waves'][] = $this->estimateWaveHeight($speed);
             }
 
+            // Состояние погоды по осадкам и облачности
             $result[$dayKey][$rangeKey]['conditions'][] = $this->deriveCondition(
                 $ptype[$i]   ?? null,
-                $lclouds[$i] ?? null
+                $lclouds[$i] ?? null,
+                $mclouds[$i] ?? null
             );
         }
 
@@ -96,16 +105,32 @@ class WindyAdapter implements WeatherServiceInterface
 
     /**
      * Оценивает состояние погоды по типу осадков и облачности Windy.
-     * ptype: 0 — нет осадков, 1 — дождь, 3 — фриз.дождь, 5 — снег и т.д.
+     *
+     * ptype: 0 — нет осадков, ненулевое — осадки (тип зависит от модели).
+     * Облачность приходит долей 0..1 или процентами — нормализуем.
      */
-    private function deriveCondition(?int $ptype, ?float $lowClouds): string
+    private function deriveCondition(?float $ptype, ?float $lowClouds, ?float $midClouds): string
     {
+        // Есть осадки
         if ($ptype !== null && $ptype > 0) {
-            return in_array($ptype, [5, 6, 7], true) ? 'snow' : 'rain';
+            return 'rain';
         }
-        if ($lowClouds !== null) {
-            return $lowClouds > 50 ? 'clouds' : 'clear';
+
+        // Оцениваем облачность (берём максимум из низкой и средней)
+        $clouds = max($lowClouds ?? 0, $midClouds ?? 0);
+
+        // Windy может отдавать проценты (0..100) или долю (0..1) — приводим к процентам
+        if ($clouds <= 1) {
+            $clouds *= 100;
         }
+
+        if ($clouds > 60) {
+            return 'clouds';
+        }
+        if ($clouds >= 0) {
+            return 'clear';
+        }
+
         return 'unknown';
     }
 }
