@@ -18,6 +18,12 @@ class WeatherFormatter
         // Сортируем дни по дате (ключ вида Y-m-d)
         ksort($weatherData);
 
+        // Ограничиваем количество дней из конфига (по умолчанию 5)
+        $limit = (int) config('weather.forecast_days', 5);
+        if ($limit > 0) {
+            $weatherData = array_slice($weatherData, 0, $limit, true);
+        }
+
         $timeRanges = config('weather.time_ranges');
         $conditions = config('weather.conditions');
 
