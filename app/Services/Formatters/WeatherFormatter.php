@@ -3,9 +3,12 @@
 namespace App\Services\Formatters;
 
 use App\Services\Schedule\SeasonSchedule;
+use App\Support\Concerns\PadsStrings;
 
 class WeatherFormatter
 {
+    use PadsStrings;
+
     public function __construct(
         private SeasonSchedule $season
     ) {}
@@ -56,15 +59,23 @@ class WeatherFormatter
                 $conditionKey = $timeData['condition'] ?? 'unknown';
                 $condition    = $conditions[$conditionKey] ?? $conditions['unknown'];
 
+                // Дополняем название интервала до одинаковой ширины (по самому длинному - «Полдень»)
+                $name = $this->mbStrPad($rangeInfo['name'], 7); // Утро → "Утро   "
+
                 // Значения показателей
                 $temp = ($timeData['temp'] !== null) ? round($timeData['temp']) . '°C'   : 'Н/Д';
                 $wind = ($timeData['wind'] !== null) ? round($timeData['wind']) . ' м/с' : 'Н/Д';
                 $wave = ($timeData['wave'] !== null) ? round($timeData['wave'], 1) . ' м' : 'Н/Д';
 
-                // Строка-заголовок интервала: название + состояние (без эмодзи времени)
-                $message .= "{$rangeInfo['name']} · {$condition['emoji']} {$condition['label']}\n";
-                // Строка данных с отступом
-                $message .= "   🌡 {$temp}   💨 {$wind}   🌊 {$wave}\n";
+                // Дополняем каждое значение до фиксированной ширины (пробелами справа)
+                $tempCol = $this->mbStrPad($temp, 6);
+                $windCol = $this->mbStrPad($wind, 7);
+    
+                // Строка-заголовок интервала: название + состояние
+                $message .= "{$name} · {$condition['emoji']} {$condition['label']}\n";
+                // Строка данных моноширинная
+                $message .= "<code>🌡 {$tempCol} 💨 {$windCol} 🌊 {$wave}</code>\n";
+                // $message .= "<code>{$tempCol} {$windCol} {$wave}</code>\n";
             }
         }
 
