@@ -95,13 +95,10 @@ class FetchWeatherCommand extends Command
             $message .= "Time: `{$now}`\n";
             $message .= "App: `{$appName}`\n";
             $message .= "Version: `{$version}`\n";
-            $message .= "Branch: `{$branch}`\n";
-            $message .= "Author: " . $escape($author) . "\n";
             $message .= "Commit: `{$hash}` " . $escape($subject) . "\n";
-
             // Тело коммита добавляем только если оно непустое
             if ($body !== '') {
-                $message .= "\n📝 *Изменения:*\n" . $escape($body);
+                $message .= "\n" . $escape($body);
             }
 
             $developChatId = $location['dev_chat_id'];

@@ -94,4 +94,15 @@ trait NormalizesWeather
         }
         return $result;
     }
+
+    /**
+     * Дополняет строку до заданной длины пробелами справа с учётом
+     * многобайтных символов (кириллица, °).
+     */
+    private function mbStrPad(string $str, int $length): string
+    {
+        $pad = $length - mb_strlen($str);
+
+        return $pad > 0 ? $str . str_repeat(' ', $pad) : $str;
+    }
 }
