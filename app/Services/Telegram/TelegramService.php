@@ -2,8 +2,7 @@
 
 namespace App\Services\Telegram;
 
-use App\Services\Formatters\MarkdownFormatter;
-use App\Services\Formatters\TextFormatter;
+use App\Services\Formatters\WeatherFormatter;
 use Illuminate\Support\Facades\Log;
 use Telegram\Bot\Api;
 use Telegram\Bot\Exceptions\TelegramSDKException;
@@ -25,17 +24,10 @@ class TelegramService
      */
     protected $textFormatter;
 
-    /**
-     * Конструктор
-     */
-    public function __construct(
-        Api $telegram,
-        MarkdownFormatter $markdownFormatter,
-        TextFormatter $textFormatter
-    ) {
-        $this->telegram = $telegram;
-        $this->markdownFormatter = $markdownFormatter;
-        $this->textFormatter = $textFormatter;
+    public function __construct(Api $telegram, WeatherFormatter $formatter)
+    {
+        $this->telegram  = $telegram;
+        $this->formatter = $formatter;
     }
 
     /**
@@ -124,15 +116,15 @@ class TelegramService
         }
     }
 
-    public function sendDeployMessage(string $chatId, string $message, string $parseMode = 'Markdown'): bool
+    /**
+    * Отправка служебного сообщения о деплое в чат разработки.
+    */
+    public function sendDeployMessage(string $chatId, string $text, ?string $parseMode = 'Markdown'): bool
     {
         try {
-            return $this->sendMessage($chatId, $message, $parseMode);
+            return $this->sendMessage($chatId, $text, $parseMode);
         } catch (\Exception $e) {
-            Log::error('Ошибка при отправке тестового сообщения в Telegram', [
-                'error' => $e->getMessage(),
-            ]);
-
+            Log::error('Ошибка при отправке deploy-сообщения в Telegram', ['error' => $e->getMessage()]);
             return false;
         }
     }

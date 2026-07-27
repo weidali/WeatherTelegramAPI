@@ -67,9 +67,11 @@ class FetchWeatherCommand extends Command
         // Проверяем наличие тестовых флагов
         if ($this->option('test-windy')) {
             $this->info('Отправка тестового сообщения для Windy API...');
-            $this->telegramService->sendTestMessage($chatId, 'Windy API');
+            return $this->runSourceTest('windy', $location);
+        }
 
-            return 0;
+        if ($this->option('test-openweathermap')) {
+            return $this->runSourceTest('openweathermap', $location);
         }
 
         if ($this->option('deploy-info')) {
@@ -153,4 +155,39 @@ class FetchWeatherCommand extends Command
             return 1;
         }
     }
+
+    /**
+     * Тестовый прогон прогноза через конкретный источник с отправкой карточки в Telegram.
+     */
+    private function runSourceTest(string $source, array $location): int
+    {
+        $this->info("Тест источника «{$source}» для {$location['name']}...");
+
+        try {
+            $data = $this->weatherService->getForecastFrom(
+                $source,
+                $location['lat'],
+                $location['lon']
+            );
+
+            $success = $this->telegramService->sendWeatherForecast(
+                $data,
+                $location['chat_id'],
+                $location['name']
+            );
+
+            if ($success) {
+                $this->info("Прогноз от «{$source}» отправлен в Telegram");
+                return 0;
+            }
+
+            $this->error("Не удалось отправить прогноз от «{$source}»");
+            return 1;
+        } catch (WeatherApiException $e) {
+            $msg = "Ошибка источника «{$source}»: " . $e->getMessage();
+            $this->error($msg);
+            $this->telegramService->sendErrorNotification($msg, $location['chat_id']);
+            return 1;
+        }
+    }   
 }

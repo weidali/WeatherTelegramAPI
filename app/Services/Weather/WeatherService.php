@@ -96,4 +96,18 @@ class WeatherService
             return false;
         }
     }
+
+    /**
+     * Получение прогноза через конкретный источник (для тестов).
+     *
+     * @param string $source 'windy' | 'openweathermap'
+     */
+    public function getForecastFrom(string $source, float $lat, float $lon): array
+    {
+        return match ($source) {
+            'windy'          => $this->windyAdapter->getForecast($lat, $lon),
+            'openweathermap' => $this->openWeatherMapAdapter->getForecast($lat, $lon),
+            default          => throw new WeatherApiException("Неизвестный источник: {$source}"),
+        };
+    }
 }
