@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Formatters;
+namespace App\Services\Formatters;
 
 class WeatherFormatter
 {
