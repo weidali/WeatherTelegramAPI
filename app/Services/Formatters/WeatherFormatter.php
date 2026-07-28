@@ -64,8 +64,8 @@ class WeatherFormatter
 
                 // Значения показателей
                 $temp = ($timeData['temp'] !== null) ? round($timeData['temp']) . '°C'   : 'Н/Д';
-                $wind = ($timeData['wind'] !== null) ? round($timeData['wind']) . ' м/с' : 'Н/Д';
-                $wave = ($timeData['wave'] !== null) ? round($timeData['wave'], 1) . ' м' : 'Н/Д';
+                $wind = ($timeData['wind'] !== null) ? round($timeData['wind']) . 'м/с' : 'Н/Д';
+                $wave = ($timeData['wave'] !== null) ? round($timeData['wave'], 1) . 'м' : 'Н/Д';
 
                 // Дополняем каждое значение до фиксированной ширины (пробелами справа)
                 $tempCol = $this->mbStrPad($temp, 6);
@@ -74,7 +74,7 @@ class WeatherFormatter
                 // Строка-заголовок интервала: название + состояние
                 $message .= "{$name} · {$condition['emoji']} {$condition['label']}\n";
                 // Строка данных моноширинная
-                $message .= "<code>🌡 {$tempCol} 💨 {$windCol} 🌊 {$wave}</code>\n";
+                $message .= "<code>🌡{$tempCol} 💨{$windCol} 🌊{$wave}</code>\n";
                 // $message .= "<code>{$tempCol} {$windCol} {$wave}</code>\n";
             }
         }
